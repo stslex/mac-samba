@@ -1,0 +1,39 @@
+#!/bin/bash
+sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
+cp smb-apple.conf smb.conf
+echo -e "\e[7mWhat would you like to name your share?\e[27m"
+read sharename
+echo >> smb.conf
+echo [$sharename] >> smb.conf
+echo -e "\e[7mWhich directory should this share lead to? (Full path)\e[27m"
+read sharepath
+echo path = $sharepath >> smb.conf
+echo "read only = no" >> smb.conf
+echo "guest ok = no" >> smb.conf
+echo "browseable = yes" >> smb.conf
+echo -e "\e[7mWhich users should be allowed to access this share? (Separate with spaces and for groups use the format @groupname)\e[27m"
+read validusers
+echo valid users = $validusers >> smb.conf
+echo "spotlight = yes" >> smb.conf
+echo "vfs objects = catia fruit streams_xattr" >> smb.conf
+echo "fruit:aapl = yes" >> smb.conf
+echo -e "\e[7mWould you like the share to show up as a Time Machine drive? (y/n)\e[27m"
+read timemachine
+if [ $timemachine == "y" ]
+then
+    echo "fruit:time machine = yes" >> smb.conf
+    echo -e "\e[7mTime Machine support will be added.\e[27m"
+else
+    echo -e "\e[7mTime Machine support WILL NOT be added.\e[27m"
+fi
+PS3="What would you like your server to look like? "
+
+select model in "Xserve" "MacPro6,1" "MacPro7,1" "Macmini" "TimeCapsule"
+do
+	echo "Selected model: $model"
+	sed "s/Xserve/$model/g" smb-apple.conf
+	break
+done
+echo -e "\e[7mCongratulations! You now have a working Apple Samba share!\e[27m"
+sudo mv smb.conf /etc/samba/
+sudo systemctl restart smbd
